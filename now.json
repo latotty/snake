@@ -1,4 +1,5 @@
 {
   "type": "npm",
-  "name": "snake"
+  "name": "latotty-snake",
+  "alias": "latotty-snake"
 }
