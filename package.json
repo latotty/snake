@@ -1,0 +1,30 @@
+{
+  "name": "snake-v3",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@types/d3-ease": "1.0.7",
+    "@types/next": "7.0.5",
+    "@types/react": "16.7.18",
+    "@types/react-dom": "16.0.11",
+    "@types/react-measure": "2.0.4",
+    "@zeit/next-typescript": "1.1.1",
+    "d3-ease": "1.0.5",
+    "fork-ts-checker-webpack-plugin": "0.5.2",
+    "konva": "^2.6.0",
+    "next": "latest",
+    "react": "16.7.0-alpha.2",
+    "react-dom": "16.7.0-alpha.2",
+    "react-konva": "16.7.0",
+    "react-measure": "2.2.2",
+    "react-spring": "7.2.4",
+    "typescript": "3.2.2"
+  },
+  "license": "ISC",
+  "keywords": [],
+  "description": ""
+}
