@@ -1,4 +1,5 @@
 [![Deploy to now](https://deploy.now.sh/static/button.svg)](https://deploy.now.sh/?repo=https://github.com/zeit/next.js/tree/master/examples/hello-world)
+[![Open in CodeSandbox](https://codesandbox.io/favicon.ico)](https://codesandbox.io/s/github/latotty/snake)
 
 # Hello World example
 
