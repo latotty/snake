@@ -1,5 +1,11 @@
 {
-  "type": "npm",
+  "version": 2,
   "name": "latotty-snake",
-  "alias": "latotty-snake"
+  "alias": "latotty-snake",
+  "builds": [
+    {
+      "src": "next.config.js",
+      "use": "@now/next"
+    }
+  ]
 }
