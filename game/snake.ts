@@ -2,7 +2,6 @@ import { getWallCells } from '../lib/wall-cells';
 import { Coord, coordEq, coordCollide, coordAdd } from '../lib/coord';
 
 export type Direction = Coord;
-type Wall = [Coord, Coord];
 export const Directions = {
   Up: [0, -1] as Direction,
   Right: [1, 0] as Direction,
@@ -15,7 +14,7 @@ export interface Config {
   boardHeight: number;
   initialSize: number;
   foodValue: 0.1;
-  walls: Wall[];
+  walls: [Coord, Coord][];
 }
 
 export interface State {
@@ -43,25 +42,28 @@ const freeCellCount = (config: Config, ignoredCoords: Coord[]): number => {
   return freeCellCount;
 };
 
-const moveOnBoard = (
+const normalizeCoords = (config: Config, [x, y]: Coord): Coord => {
+  if (x < 0) {
+    return normalizeCoords(config, [config.boardWidth + x, y]);
+  }
+  if (x >= config.boardWidth) {
+    return normalizeCoords(config, [x - config.boardWidth, y]);
+  }
+  if (y < 0) {
+    return normalizeCoords(config, [x, config.boardHeight + y]);
+  }
+  if (y >= config.boardHeight) {
+    return normalizeCoords(config, [x, y - config.boardHeight]);
+  }
+  return [x, y];
+};
+
+export const moveOnBoard = (
   config: Config,
   coord: Coord,
   direction: Direction,
 ): Coord => {
-  const [x, y] = coordAdd(coord, direction);
-  if (x < 0) {
-    return [config.boardWidth + x, y];
-  }
-  if (x >= config.boardWidth) {
-    return [x - config.boardWidth, y];
-  }
-  if (y < 0) {
-    return [x, config.boardHeight + y];
-  }
-  if (y >= config.boardHeight) {
-    return [x, y - config.boardHeight];
-  }
-  return [x, y];
+  return normalizeCoords(config, coordAdd(coord, direction));
 };
 
 export function createGame(
