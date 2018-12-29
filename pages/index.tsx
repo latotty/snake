@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import * as snakeGame from '../game/snake';
 import { SnakeView } from '../components/snake-view';
 import { WALLS } from '../lib/walls';
-import { coordEq, coordAdd } from '../lib/coord';
+import { coordEq } from '../lib/coord';
 
 const snakeLoop = (
   gameTick: (
@@ -51,6 +51,7 @@ const keyMap: { [key: string]: snakeGame.Direction } = {
 };
 
 const keyListener = (
+  config: snakeGame.Config,
   gameTick: (
     state: snakeGame.State | undefined,
     newDirection?: snakeGame.Direction,
@@ -72,7 +73,7 @@ const keyListener = (
         if (
           (state.snakeParts.length > 2 &&
             coordEq(
-              coordAdd(state.snakeParts[0], direction),
+              snakeGame.moveOnBoard(config, state.snakeParts[0], direction),
               state.snakeParts[1],
             )) ||
           coordEq(state.direction, direction)
@@ -125,6 +126,7 @@ const snakeHook = (
       );
 
       const { startListen, stopListen } = keyListener(
+        config,
         gameTick,
         setSnakeState,
         resetLoop,
@@ -152,6 +154,11 @@ export default () => {
     walls: WALLS[0].value,
   });
   const { snakeState, loopTimeout } = snakeHook(snakeConfig);
+  const [vision, setVision] = useState<boolean>(false);
+  const onVisionChange = useCallback(event => {
+    event.persist();
+    setVision(event.target.checked);
+  }, []);
 
   const onWallSelect = useCallback(event => {
     event.persist();
@@ -176,7 +183,11 @@ export default () => {
       `}</style>
       <div>
         <div style={{ maxWidth: 700 }}>
-          <SnakeView snakeConfig={snakeConfig} snakeState={snakeState} />
+          <SnakeView
+            snakeConfig={snakeConfig}
+            snakeState={snakeState}
+            vision={vision}
+          />
         </div>
         <div style={{ display: 'inline-block' }}>
           <div>{snakeState.gameOver ? 'Game Over (Press SPACE)' : ''}</div>
@@ -191,6 +202,16 @@ export default () => {
                 </option>
               ))}
             </select>
+          </div>
+          <div>
+            <label>
+              Vision:{' '}
+              <input
+                checked={vision}
+                type="checkbox"
+                onChange={onVisionChange}
+              />
+            </label>
           </div>
         </div>
       </div>

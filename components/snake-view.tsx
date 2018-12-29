@@ -8,6 +8,7 @@ import { GridLayer } from './grid-layer';
 import { Snake } from './snake';
 import { Food } from './food';
 import { Wall } from './wall';
+import { SnakeVision } from './snake-vision';
 
 const getScale = (
   stageWidth: number,
@@ -23,9 +24,11 @@ const getScale = (
 export const SnakeView = ({
   snakeConfig,
   snakeState,
+  vision,
 }: {
   snakeConfig: snakeGame.Config;
   snakeState: snakeGame.State;
+  vision: boolean;
 }) => {
   const cellSize = 20;
   const stageWith = snakeConfig.boardWidth * cellSize;
@@ -72,6 +75,22 @@ export const SnakeView = ({
     [cellSize, snakeState],
   );
 
+  const visionLayer = useMemo(
+    () =>
+      vision && (
+        <Layer>
+          <SnakeVision
+            config={snakeConfig}
+            cellSize={cellSize}
+            snakeParts={snakeState.snakeParts}
+            forward={snakeState.direction}
+            food={snakeState.food}
+          />
+        </Layer>
+      ),
+    [vision, cellSize, snakeConfig, snakeState],
+  );
+
   return (
     <Measure
       bounds
@@ -100,6 +119,7 @@ export const SnakeView = ({
               {gridLayer}
               {gameLayer}
               {wallLayer}
+              {visionLayer}
             </Stage>
           </div>
         </div>
