@@ -17,14 +17,17 @@ export const coordCollide = (coord: Coord, coords: Coord[]): boolean => {
   return coords.some(c => coordEq(c, coord));
 };
 
-export const coordRotate90 = (coord: Coord): Coord => [coord[1] * -1, coord[0]];
+export const coordRotate90 = (coord: Coord): Coord => [
+  (coord[1] && coord[1] * -1) || 0,
+  coord[0],
+];
 export const coordRotate270 = (coord: Coord): Coord => [
   coord[1],
-  coord[0] * -1,
+  (coord[0] && coord[0] * -1) || 0,
 ];
 export const coordRotate180 = (coord: Coord): Coord => [
-  coord[0] * -1,
-  coord[1] * -1,
+  (coord[0] && coord[0] * -1) || 0,
+  (coord[1] && coord[1] * -1) || 0,
 ];
 
 export const coordSortAndUniq = (coords: Coord[]): Coord[] => {
