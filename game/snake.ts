@@ -1,5 +1,5 @@
 import { getWallCells } from '../lib/wall-cells';
-import { Coord, coordEq, coordCollide, coordAdd } from '../lib/coord';
+import { tuple, Coord, coordEq, coordCollide, coordAdd } from '../lib/coord';
 
 export type Direction = Coord;
 export const Directions = {
@@ -26,14 +26,18 @@ export interface State {
 }
 
 // better random gen, when the board is full TODO
-const randomCoord = (config: Config, ignoredCoords: Coord[]): Coord => {
-  const coord: Coord = [
-    Math.floor(Math.random() * config.boardWidth),
-    Math.floor(Math.random() * config.boardHeight),
-  ];
-  return coordCollide(coord, ignoredCoords)
-    ? randomCoord(config, ignoredCoords)
-    : coord;
+const randomCoord = (config: Config, ignoredCoords: Coord[]): Coord | null => {
+  if (freeCellCount(config, ignoredCoords) < 1) {
+    return null;
+  }
+  const freeCells = Array(config.boardWidth * config.boardHeight)
+    .fill(null)
+    .map((_, i) =>
+      tuple(Math.floor(i / config.boardHeight), i % config.boardHeight),
+    )
+    .filter(coord => !coordCollide(coord, ignoredCoords));
+
+  return freeCells[Math.floor(Math.random() * freeCells.length)];
 };
 
 const freeCellCount = (config: Config, ignoredCoords: Coord[]): number => {
@@ -73,10 +77,13 @@ export function createGame(
 
   const tick = (state: State | undefined, newDirection?: Direction): State => {
     if (!state) {
-      const snakeParts = [randomCoord(config, wallCells)];
-      const food = randomCoord(config, [...snakeParts, ...wallCells]);
+      const snakeHead = randomCoord(config, wallCells)!;
+      const food = randomCoord(config, [snakeHead, ...wallCells])!;
+      if (!food || !snakeHead) {
+        throw new Error('invalid map');
+      }
       return {
-        snakeParts,
+        snakeParts: [snakeHead],
         food,
         growth: config.initialSize - 1,
         direction: [
@@ -103,31 +110,31 @@ export function createGame(
     const snakeHead = state.snakeParts[0];
     const nextCell = moveOnBoard(config, snakeHead, state.direction);
 
+    const nextTickBody = state.growth
+      ? state.snakeParts
+      : state.snakeParts.slice(0, -1);
+
     if (coordEq(nextCell, state.food)) {
       // ate apple
-      const snakeParts = [state.food, ...state.snakeParts];
-      if (freeCellCount(config, [...snakeParts, ...wallCells]) === 0) {
-        // WINNING
+      const snakeParts = [nextCell, ...nextTickBody];
+      const food = randomCoord(config, [...snakeParts, ...wallCells]);
+      if (!food) {
+        // full table so WINNING
         return {
           ...state,
           gameOver: true,
         };
       }
-      const food = randomCoord(config, [...snakeParts, ...wallCells]);
       return {
         ...state,
         growth:
           state.growth +
-          Math.max(1, Math.ceil(state.snakeParts.length * config.foodValue)) -
-          1,
+          Math.max(1, Math.ceil(state.snakeParts.length * config.foodValue)),
         snakeParts,
         food,
       };
     }
 
-    const nextTickBody = state.growth
-      ? state.snakeParts
-      : state.snakeParts.slice(0, -1);
     if (coordCollide(nextCell, [...nextTickBody, ...wallCells])) {
       // hit tail or wall
       return {
