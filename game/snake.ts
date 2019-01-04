@@ -70,6 +70,11 @@ export const moveOnBoard = (
   return normalizeCoords(config, coordAdd(coord, direction));
 };
 
+const getRandomDirection = () =>
+  [Directions.Up, Directions.Right, Directions.Down, Directions.Left][
+    Math.floor(Math.random() * 4)
+  ];
+
 export function createGame(
   config: Config,
 ): (state: State | undefined, newDirection?: Direction) => State {
@@ -77,21 +82,17 @@ export function createGame(
 
   const tick = (state: State | undefined, newDirection?: Direction): State => {
     if (!state) {
+      const direction = getRandomDirection();
       const snakeHead = randomCoord(config, wallCells)!;
       const food = randomCoord(config, [snakeHead, ...wallCells])!;
       if (!food || !snakeHead) {
         throw new Error('invalid map');
       }
       return {
-        snakeParts: [snakeHead],
         food,
+        direction,
+        snakeParts: [snakeHead],
         growth: config.initialSize - 1,
-        direction: [
-          Directions.Up,
-          Directions.Right,
-          Directions.Down,
-          Directions.Left,
-        ][Math.floor(Math.random() * 4)],
         gameOver: false,
       };
     }
