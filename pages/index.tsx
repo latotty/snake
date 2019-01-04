@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import * as snakeGame from '../game/snake';
 import { SnakeView } from '../components/snake-view';
 import { WALLS } from '../lib/walls';
-import { manualSnakeHook } from '../lib/manual-snake.hook';
+import { useManualSnake } from '../lib/manual-snake.hook';
 
 const BASE_TIMEOUT = 200;
 const BASE_SPEED = 1;
@@ -19,7 +19,7 @@ export default () => {
   const [speed, setSpeed] = useState(BASE_SPEED);
   const [vision, setVision] = useState<boolean>(false);
 
-  const { snakeState, loopTimeout } = manualSnakeHook(
+  const { snakeState, loopTimeout } = useManualSnake(
     snakeConfig,
     speed,
     BASE_TIMEOUT,

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import Measure from 'react-measure';
 import { Stage, Layer } from 'react-konva';
 
-import { windowSizeHook } from '../lib/window-size.hook';
+import { useWindowSize } from '../lib/window-size.hook';
 import * as snakeGame from '../game/snake';
 import { GridLayer } from './grid-layer';
 import { Snake } from './snake';
@@ -35,7 +35,7 @@ export const SnakeView = ({
   const stageHeight = snakeConfig.boardHeight * cellSize;
 
   const [size, setSize] = useState([800, 800]);
-  const windowSize = windowSizeHook();
+  const windowSize = useWindowSize();
   const stageSize = Math.min(size[0], windowSize[1] * 0.8);
 
   const margin = 10;
