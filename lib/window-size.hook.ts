@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { debounce } from '../lib/debounce';
 
-export const windowSizeHook = (
+export const useWindowSize = (
   initialSize: [number, number] = [800, 600],
 ): [number, number] => {
   const [size, setSize] = useState<[number, number]>(initialSize);

@@ -90,7 +90,7 @@ const keyListener = (
   };
 };
 
-export const manualSnakeHook = (
+export const useManualSnake = (
   config: snakeGame.Config,
   speed: number,
   baseTimeout: number,
