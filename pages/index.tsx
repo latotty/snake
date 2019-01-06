@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import Router from 'next/router';
 
 import * as snakeGame from '../game/snake';
 import { SnakeView } from '../components/snake-view';
@@ -8,16 +9,39 @@ import { useManualSnake } from '../lib/manual-snake.hook';
 const BASE_TIMEOUT = 200;
 const BASE_SPEED = 1;
 
-export default () => {
+const getRandomSeed = () =>
+  Math.random()
+    .toString()
+    .slice(2);
+
+const getWallsByKey = (key: string) => WALLS.find(wall => wall.key === key);
+
+const pushURL = (query: Partial<{ seed: string; walls: string }>) => {
+  Router.push({
+    pathname: Router.pathname,
+    query: { ...Router.query, ...query },
+  });
+};
+
+const IndexPage = ({
+  wallsKey,
+  seed,
+  boardWidth,
+  boardHeight,
+}: {
+  wallsKey: string;
+  seed: string;
+  boardWidth: number;
+  boardHeight: number;
+}) => {
+  const wallsDef = getWallsByKey(wallsKey) || WALLS[0];
   const [snakeConfig, setSnakeConfig] = useState<snakeGame.Config>({
-    boardWidth: 40,
-    boardHeight: 40,
+    boardWidth,
+    boardHeight,
     initialSize: 3,
     foodValue: 0.1,
-    walls: WALLS[0].value,
-    seed: Math.random()
-      .toString()
-      .slice(2),
+    walls: wallsDef.value(boardWidth, boardHeight),
+    seed: seed,
   });
   const [speed, setSpeed] = useState(BASE_SPEED);
   const [vision, setVision] = useState<boolean>(false);
@@ -27,6 +51,11 @@ export default () => {
     speed,
     BASE_TIMEOUT,
   );
+
+  const changeSeed = (newSeed: string) => {
+    pushURL({ seed: newSeed });
+    setSnakeConfig(config => ({ ...config, seed: newSeed }));
+  };
 
   const resetGame = useCallback(() => setSnakeConfig(c => ({ ...c })), []);
   const increaseSpeed = useCallback(() => setSpeed(s => s + 1), []);
@@ -40,32 +69,24 @@ export default () => {
   }, []);
   const onSeedChange = useCallback(event => {
     event.persist();
-    setSnakeConfig(config => ({ ...config, seed: event.target.value }));
+    changeSeed(event.target.value);
   }, []);
   const randomizeSeed = useCallback(event => {
     event.persist();
-    setSnakeConfig(config => ({
-      ...config,
-      seed: Math.random()
-        .toString()
-        .slice(2),
-    }));
+    changeSeed(getRandomSeed());
   }, []);
 
   const onWallSelect = useCallback(event => {
     event.persist();
-    const def = WALLS.find(wall => wall.key === event.target.value);
+    const def = getWallsByKey(event.target.value);
     if (def) {
+      pushURL({ walls: event.target.value });
       setSnakeConfig((config: snakeGame.Config) => ({
         ...config,
-        walls: def.value,
+        walls: def.value(config.boardWidth, config.boardHeight),
       }));
     }
   }, []);
-
-  const wallKey = (
-    WALLS.find(wall => wall.value === snakeConfig.walls) || { key: 'unknown' }
-  ).key;
 
   return (
     <React.Fragment>
@@ -95,7 +116,7 @@ export default () => {
           </div>
           <div>
             Wall layout:
-            <select value={wallKey} onChange={onWallSelect}>
+            <select value={wallsDef.key} onChange={onWallSelect}>
               {WALLS.map(({ name, key }) => (
                 <option key={key} value={key}>
                   {name}
@@ -129,3 +150,24 @@ export default () => {
     </React.Fragment>
   );
 };
+
+IndexPage.getInitialProps = ({
+  query,
+}: {
+  query: { [key: string]: string };
+}) => {
+  const seed = query.seed || getRandomSeed();
+  const wallsKey = query.walls || WALLS[0].key;
+  const wallsDef = getWallsByKey(wallsKey);
+  const boardWidth = parseInt(query.width) || 31;
+  const boardHeight = parseInt(query.height) || 31;
+
+  return {
+    seed,
+    wallsKey: wallsDef ? wallsKey : WALLS[0].key,
+    boardWidth,
+    boardHeight,
+  };
+};
+
+export default IndexPage;
