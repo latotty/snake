@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 
 import * as snakeGame from '../game/snake';
 import { coordEq } from '../lib/coord';
@@ -56,11 +56,12 @@ const keyListener = (
   ) => snakeGame.State,
   setSnakeState: ((cb: (state: snakeGame.State) => snakeGame.State) => void),
   resetLoop: Function,
+  resetGame: Function,
 ): { startListen: Function; stopListen: Function } => {
   const keydown = (event: KeyboardEvent) => {
     switch (event.key) {
       case ' ':
-        setSnakeState(() => gameTick(undefined));
+        resetGame();
         return event.preventDefault();
     }
 
@@ -98,9 +99,16 @@ export const useManualSnake = (
   snakeState: snakeGame.State;
   loopTimeout: number;
 } => {
-  const gameTick = useMemo(() => snakeGame.createGame(config), [config]);
+  const [gameTick, setGameTick] = useState(() => snakeGame.createGame(config));
   const [snakeState, setSnakeState] = useState(() => gameTick(undefined));
-  useEffect(() => setSnakeState(gameTick(undefined)), [config]); // RESET EFFECT
+  const resetGame = () => {
+    const newGameTick = snakeGame.createGame(config);
+    const newState = newGameTick(undefined);
+    setGameTick(() => newGameTick);
+    setSnakeState(() => newState);
+  };
+  useEffect(() => resetGame(), [config]); // RESET EFFECT
+
   const loopTimeout =
     baseTimeout *
     Math.min(1, 0.99 ** (snakeState.snakeParts.length / 8)) *
@@ -119,6 +127,7 @@ export const useManualSnake = (
         gameTick,
         setSnakeState,
         resetLoop,
+        resetGame,
       );
       startLoop();
       startListen();

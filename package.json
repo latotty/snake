@@ -12,12 +12,13 @@
     "d3-ease": "1.0.5",
     "fork-ts-checker-webpack-plugin": "0.5.2",
     "konva": "2.6.0",
-    "next": "latest",
+    "next": "7.0.2",
     "react": "16.7.0-alpha.2",
     "react-dom": "16.7.0-alpha.2",
     "react-konva": "16.7.0",
     "react-measure": "2.2.2",
     "react-spring": "7.2.4",
+    "seedrandom": "2.4.4",
     "typescript": "3.2.2"
   },
   "devDependencies": {

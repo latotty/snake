@@ -15,6 +15,9 @@ export default () => {
     initialSize: 3,
     foodValue: 0.1,
     walls: WALLS[0].value,
+    seed: Math.random()
+      .toString()
+      .slice(2),
   });
   const [speed, setSpeed] = useState(BASE_SPEED);
   const [vision, setVision] = useState<boolean>(false);
@@ -34,6 +37,19 @@ export default () => {
   const onVisionChange = useCallback(event => {
     event.persist();
     setVision(event.target.checked);
+  }, []);
+  const onSeedChange = useCallback(event => {
+    event.persist();
+    setSnakeConfig(config => ({ ...config, seed: event.target.value }));
+  }, []);
+  const randomizeSeed = useCallback(event => {
+    event.persist();
+    setSnakeConfig(config => ({
+      ...config,
+      seed: Math.random()
+        .toString()
+        .slice(2),
+    }));
   }, []);
 
   const onWallSelect = useCallback(event => {
@@ -95,6 +111,17 @@ export default () => {
                 type="checkbox"
                 onChange={onVisionChange}
               />
+            </label>
+          </div>
+          <div>
+            <label>
+              Seed:{' '}
+              <input
+                type="text"
+                value={snakeConfig.seed}
+                onChange={onSeedChange}
+              />
+              <button onClick={randomizeSeed}>Random</button>
             </label>
           </div>
         </div>
