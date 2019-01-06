@@ -6,7 +6,7 @@ import { WALLS, getWallsByKey } from '../lib/walls';
 import { ConfigPanel } from '../components/config-panel';
 import { ViewSettingsPanel } from '../components/view-settings-panel';
 import { pushURL } from '../lib/next-router';
-import { Decision, AITick, decisionToDirection } from '../ai/ai';
+import { AITick, decisionToDirection } from '../ai/ai';
 import { randomAI } from '../ai/random/random-ai';
 
 const BASE_TIMEOUT = 200;
@@ -139,7 +139,12 @@ const RunnerPage = ({
     [snakeConfig, setRunner, aisNames],
   ); // RESET EFFECT
 
-  const [aisState, setAisState] = useState(() => []);
+  const [aisState, setAisState] = useState<
+    {
+      state: snakeGame.State;
+      name: string;
+    }[]
+  >(() => []);
 
   useEffect(
     () => {
