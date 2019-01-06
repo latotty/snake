@@ -67,7 +67,6 @@ export const ConfigPanel = ({
       event.persist();
       const newSize = parseInt(event.target.value);
       const wallsDef = getWallsByKey(wallsKey);
-      console.log(wallsDef, wallsKey);
       if (newSize > 0 && (wallsDef || wallsKey === 'custom')) {
         onConfigChange({
           ...(wallsDef && { walls: wallsDef.value(newSize, newSize) }),
