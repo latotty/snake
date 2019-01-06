@@ -1,7 +1,7 @@
-import * as snakeGame from '../game/snake';
-import { SnakeConfig } from '../game/snake-config';
-import { getWallCells } from '../lib/wall-cells';
-import { Coord, coordCollide } from './coord';
+import * as snakeGame from './snake';
+import { SnakeConfig } from './snake-config';
+import { getWallCells } from './walls';
+import { Coord, coordCollide } from '../lib/coord';
 import { getDirections } from './directions';
 
 /**

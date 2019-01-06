@@ -1,4 +1,4 @@
-import { Coord, tuple } from './coord';
+import { Coord, tuple, coordSortAndUniq } from '../lib/coord';
 
 export type Wall = [Coord, Coord];
 export type WallFn = (width: number, height: number) => Wall[];
@@ -99,3 +99,22 @@ export const validateWalls = (walls: Wall[]) =>
           cell.every(num => Number.isInteger(num) && num >= 0),
       ),
   );
+
+const getSingleWallCells = (definition: Wall): Coord[] => {
+  const X = Math.min(definition[0][0], definition[1][0]);
+  const Y = Math.min(definition[0][1], definition[1][1]);
+  const W = 1 + Math.abs(definition[0][0] - definition[1][0]);
+  const H = 1 + Math.abs(definition[0][1] - definition[1][1]);
+  return Array(W * H)
+    .fill(undefined)
+    .map((_, i) => tuple(X + Math.floor(i / H), Y + (i % H)));
+};
+
+export const getWallCells = (definitions: Wall[]): Coord[] => {
+  return coordSortAndUniq(
+    definitions.reduce<Coord[]>(
+      (acc, wallDef) => [...acc, ...getSingleWallCells(wallDef)],
+      [],
+    ),
+  );
+};

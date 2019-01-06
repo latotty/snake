@@ -4,7 +4,7 @@ import {
   coordRotate90,
   coordRotate180,
   coordRotate270,
-} from './coord';
+} from '../lib/coord';
 
 export const getDirections = (forward: Coord): Coord[] => {
   const right = coordRotate90(forward);

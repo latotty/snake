@@ -1,4 +1,4 @@
-import { Wall, validateWalls } from '../lib/walls';
+import { Wall, validateWalls } from './walls';
 import { uniencode, unidecode } from '../lib/uniencode';
 
 const getRandomSeed = () =>

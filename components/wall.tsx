@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { GridCell } from './grid-cell';
-import { getWallCells } from '../lib/wall-cells';
+import { getWallCells } from '../game/walls';
 
 export const Wall = ({
   definition,
