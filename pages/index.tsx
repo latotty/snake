@@ -29,6 +29,8 @@ const pushURL = (
   });
 };
 
+const inlineBlockStyle = { display: 'inline-block' };
+
 const IndexPage = ({
   wallsKey,
   seed,
@@ -112,7 +114,7 @@ const IndexPage = ({
         }
       `}</style>
       <div>
-        <div style={{ display: 'inline-block' }}>
+        <div style={inlineBlockStyle}>
           <SnakeView
             snakeConfig={snakeConfig}
             snakeState={snakeState}
@@ -123,7 +125,7 @@ const IndexPage = ({
             }
           />
         </div>
-        <div style={{ display: 'inline-block' }}>
+        <div style={inlineBlockStyle}>
           <div>{snakeState.gameOver ? 'Game Over (Press SPACE)' : ''}</div>
           <div>Score: {snakeState.snakeParts.length}</div>
           <div>
