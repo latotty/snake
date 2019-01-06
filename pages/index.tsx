@@ -19,8 +19,7 @@ const pushURL = (
   query: Partial<{
     seed: string;
     walls: string;
-    width: number;
-    height: number;
+    size: number;
   }>,
 ) => {
   Router.push({
@@ -82,10 +81,7 @@ const IndexPage = ({
     [setSnakeConfig],
   );
 
-  const onSizeChange = useCallback(
-    size => pushURL({ width: size, height: size }),
-    [],
-  );
+  const onSizeChange = useCallback(size => pushURL({ size: size }), []);
 
   const configPanel = useMemo(
     () => (
@@ -161,8 +157,8 @@ IndexPage.getInitialProps = ({
   const seed = query.seed || getRandomSeed();
   const wallsKey = query.walls || WALLS[0].key;
   const wallsDef = getWallsByKey(wallsKey);
-  const boardWidth = parseInt(query.width) || 31;
-  const boardHeight = parseInt(query.height) || 31;
+  const boardWidth = parseInt(query.width) || query.size || 31;
+  const boardHeight = parseInt(query.height) || query.size || 31;
 
   return {
     seed,
