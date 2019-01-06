@@ -1,12 +1,13 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 
 import * as snakeGame from '../game/snake';
 import { SnakeView } from '../components/snake-view';
 import { WALLS, getWallsByKey } from '../lib/walls';
 import { ConfigPanel } from '../components/config-panel';
 import { ViewSettingsPanel } from '../components/view-settings-panel';
-import { useManualSnake } from '../lib/manual-snake.hook';
 import { pushURL } from '../lib/next-router';
+import { Decision, AITick, decisionToDirection } from '../ai/ai';
+import { randomAI } from '../ai/random/random-ai';
 
 const BASE_TIMEOUT = 200;
 const BASE_SPEED = 1;
@@ -18,7 +19,59 @@ const getRandomSeed = () =>
 
 const inlineBlockStyle = { display: 'inline-block' };
 
-const IndexPage = ({
+interface AiGame {
+  gameTick: (
+    state: snakeGame.State | undefined,
+    newDirection?: snakeGame.Direction,
+  ) => snakeGame.State;
+  state: snakeGame.State;
+  name: string;
+  aiTick: AITick;
+}
+const createRunner = (
+  config: snakeGame.Config,
+  ais: ({ name: string; tick: AITick })[],
+) => {
+  let aiGames: AiGame[] = ais.map(ai => {
+    const gameTick = snakeGame.createGame(config);
+    const state = gameTick(undefined);
+    return {
+      gameTick,
+      state,
+      name: ai.name,
+      aiTick: ai.tick,
+    };
+  });
+  return (): {
+    hasRunning: boolean;
+    ais: { name: string; state: snakeGame.State }[];
+  } => {
+    const hasRunning = aiGames.some(({ state: { gameOver } }) => !gameOver);
+    if (hasRunning) {
+      aiGames = aiGames.map(aiGame => {
+        if (aiGame.state.gameOver) {
+          return aiGame;
+        }
+        const decision = aiGame.aiTick(aiGame.state);
+        return {
+          ...aiGame,
+          state: aiGame.gameTick(
+            aiGame.gameTick(
+              aiGame.state,
+              decisionToDirection(aiGame.state.direction, decision),
+            ),
+          ),
+        };
+      });
+    }
+    return {
+      hasRunning: hasRunning,
+      ais: aiGames.map(({ name, state }) => ({ name, state })),
+    };
+  };
+};
+
+const RunnerPage = ({
   wallsKey,
   seed,
   boardWidth,
@@ -38,21 +91,67 @@ const IndexPage = ({
     walls: wallsDef.value(boardWidth, boardHeight),
     seed: seed,
   });
+
   const [viewSettings, setViewSettings] = useState({
     speed: BASE_SPEED,
     vision: false,
-    viewSize: 31,
+    viewSize: 14,
   });
-
-  const { snakeState, loopTimeout } = useManualSnake(
-    snakeConfig,
-    viewSettings.speed,
-    BASE_TIMEOUT,
+  const loopTimeout = useMemo(
+    () => BASE_TIMEOUT * 0.5 ** (viewSettings.speed - 1),
+    [viewSettings.speed],
   );
 
-  const resetGame = useCallback(() => setSnakeConfig(c => ({ ...c })), [
-    setSnakeConfig,
-  ]);
+  const [aisNames] = useState(() =>
+    Array(8)
+      .fill(null)
+      .map(() => getRandomSeed()),
+  );
+
+  const [runner, setRunner] = useState(() =>
+    createRunner(
+      snakeConfig,
+      aisNames.map(name => ({
+        name: name,
+        tick: randomAI({
+          brain: {
+            seed: name,
+          },
+        }),
+      })),
+    ),
+  );
+  useEffect(
+    () =>
+      setRunner(() =>
+        createRunner(
+          snakeConfig,
+          aisNames.map(name => ({
+            name: name,
+            tick: randomAI({
+              brain: {
+                seed: name,
+              },
+            }),
+          })),
+        ),
+      ),
+    [snakeConfig, setRunner, aisNames],
+  ); // RESET EFFECT
+
+  const [aisState, setAisState] = useState(() => []);
+
+  useEffect(
+    () => {
+      const tid = setInterval(() => {
+        const result = runner();
+        setAisState(result.ais);
+      }, loopTimeout);
+      return () => clearInterval(tid);
+    },
+    [loopTimeout, runner, setAisState],
+  );
+
   const onVisionChange = useCallback(
     newVision => {
       setViewSettings(settings => ({ ...settings, vision: newVision }));
@@ -132,33 +231,34 @@ const IndexPage = ({
         }
       `}</style>
       <div>
-        <div style={inlineBlockStyle}>
-          <SnakeView
-            snakeConfig={snakeConfig}
-            snakeState={snakeState}
-            vision={viewSettings.vision}
-            cellSize={20}
-            scale={
-              viewSettings.viewSize /
-              Math.max(snakeConfig.boardWidth, snakeConfig.boardHeight)
-            }
-          />
-        </div>
-        <div style={inlineBlockStyle}>
-          <div>{snakeState.gameOver ? 'Game Over (Press SPACE)' : ''}</div>
-          <div>Score: {snakeState.snakeParts.length}</div>
-          <div>
-            <button onClick={resetGame}>Reset</button>
-          </div>
+        <div>
           {viewSettingsPanel}
           {configPanel}
         </div>
+        {aisState.map(({ name, state }) => (
+          <div key={name} style={inlineBlockStyle}>
+            <div>
+              <div>Name: {name}</div>
+              <div>Score: {state.snakeParts.length}</div>
+            </div>
+            <SnakeView
+              snakeConfig={snakeConfig}
+              snakeState={state}
+              cellSize={20}
+              vision={viewSettings.vision}
+              scale={
+                viewSettings.viewSize /
+                Math.max(snakeConfig.boardWidth, snakeConfig.boardHeight)
+              }
+            />
+          </div>
+        ))}
       </div>
     </React.Fragment>
   );
 };
 
-IndexPage.getInitialProps = ({
+RunnerPage.getInitialProps = ({
   query,
 }: {
   query: { [key: string]: string };
@@ -177,4 +277,4 @@ IndexPage.getInitialProps = ({
   };
 };
 
-export default IndexPage;
+export default RunnerPage;
