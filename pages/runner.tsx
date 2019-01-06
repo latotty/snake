@@ -7,7 +7,7 @@ import { ConfigPanel } from '../components/config-panel';
 import { ViewSettingsPanel } from '../components/view-settings-panel';
 import { pushURL } from '../lib/next-router';
 import { AITick, decisionToDirection } from '../ai/ai';
-import { randomAI } from '../ai/random/random-ai';
+import { randomAI, createRandomAIBrainFromName } from '../ai/random/random-ai';
 import { GithubRibbon } from '../components/github-ribbon';
 
 const BASE_TIMEOUT = 200;
@@ -103,22 +103,26 @@ const RunnerPage = ({
     [viewSettings.speed],
   );
 
-  const [aisNames] = useState(() =>
+  const [aiBrains] = useState(() =>
     Array(8)
       .fill(null)
-      .map(() => getRandomSeed()),
+      .map(() => {
+        const name = getRandomSeed();
+        const brain = createRandomAIBrainFromName(name);
+        const createTick = () =>
+          randomAI({
+            brain,
+          });
+        return { type: 'random', name, brain, createTick };
+      }),
   );
 
   const [runner, setRunner] = useState(() =>
     createRunner(
       snakeConfig,
-      aisNames.map(name => ({
+      aiBrains.map(({ name, createTick }) => ({
         name: name,
-        tick: randomAI({
-          brain: {
-            seed: name,
-          },
-        }),
+        tick: createTick(),
       })),
     ),
   );
@@ -127,17 +131,13 @@ const RunnerPage = ({
       setRunner(() =>
         createRunner(
           snakeConfig,
-          aisNames.map(name => ({
+          aiBrains.map(({ name, createTick }) => ({
             name: name,
-            tick: randomAI({
-              brain: {
-                seed: name,
-              },
-            }),
+            tick: createTick(),
           })),
         ),
       ),
-    [snakeConfig, setRunner, aisNames],
+    [snakeConfig, setRunner, aiBrains],
   ); // RESET EFFECT
 
   const [aisState, setAisState] = useState<
@@ -185,6 +185,11 @@ const RunnerPage = ({
   );
 
   const onSizeChange = useCallback(size => pushURL({ size: size }), []);
+
+  const restartSimulationClick = useCallback(
+    () => setSnakeConfig(config => ({ ...config })),
+    [setSnakeConfig],
+  );
 
   const viewSettingsPanel = useMemo(
     () => (
@@ -239,27 +244,37 @@ const RunnerPage = ({
       <GithubRibbon />
       <div>
         <div>
+          <button onClick={restartSimulationClick}>Restart</button>
           {viewSettingsPanel}
           {configPanel}
         </div>
-        {aisState.map(({ name, state }) => (
-          <div key={name} style={inlineBlockStyle}>
-            <div>
-              <div>Name: {name}</div>
-              <div>Score: {state.snakeParts.length}</div>
+        <div>
+          {aisState.map(({ name, state }, i) => (
+            <div key={name} style={inlineBlockStyle}>
+              <div>
+                <div
+                  title={
+                    (aiBrains[i] && JSON.stringify(aiBrains[i].brain)) ||
+                    'error'
+                  }
+                >
+                  Name: {name}
+                </div>
+                <div>Score: {state.snakeParts.length}</div>
+              </div>
+              <SnakeView
+                snakeConfig={snakeConfig}
+                snakeState={state}
+                cellSize={20}
+                vision={viewSettings.vision}
+                scale={
+                  viewSettings.viewSize /
+                  Math.max(snakeConfig.boardWidth, snakeConfig.boardHeight)
+                }
+              />
             </div>
-            <SnakeView
-              snakeConfig={snakeConfig}
-              snakeState={state}
-              cellSize={20}
-              vision={viewSettings.vision}
-              scale={
-                viewSettings.viewSize /
-                Math.max(snakeConfig.boardWidth, snakeConfig.boardHeight)
-              }
-            />
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </React.Fragment>
   );
