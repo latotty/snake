@@ -3,9 +3,9 @@ import { Line } from 'react-konva';
 
 import * as snakeGame from '../game/snake';
 import { SnakeConfig } from '../game/snake-config';
-import { getVision } from '../lib/snake-vision';
+import { getVision } from '../game/snake-vision';
 import { Coord, coordMult, coordAdd } from '../lib/coord';
-import { getDirections } from '../lib/directions';
+import { getDirections } from '../game/directions';
 
 const cellCenter = (coord: Coord, cellSize: number): [number, number] =>
   coordAdd(coordMult(coord, [cellSize, cellSize]), [

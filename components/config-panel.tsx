@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 
 import { SnakeConfig } from '../game/snake-config';
-import { WALLS, getWallsByKey, getWallsDefByWalls } from '../lib/walls';
+import { WALLS, getWallsByKey, getWallsDefByWalls } from '../game/walls';
 
 const getRandomSeed = () =>
   Math.random()

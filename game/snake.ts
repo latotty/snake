@@ -1,7 +1,7 @@
 import { alea } from 'seedrandom';
 
-import { getWallCells } from '../lib/wall-cells';
 import { tuple, Coord, coordEq, coordCollide, coordAdd } from '../lib/coord';
+import { getWallCells } from './walls';
 import { SnakeConfig } from './snake-config';
 
 export type Direction = Coord;
