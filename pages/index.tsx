@@ -12,11 +12,6 @@ import { GithubRibbon } from '../components/github-ribbon';
 const BASE_TIMEOUT = 200;
 const BASE_SPEED = 1;
 
-const getRandomSeed = () =>
-  Math.random()
-    .toString()
-    .slice(2);
-
 const inlineBlockStyle = { display: 'inline-block' };
 
 const IndexPage = ({
@@ -31,14 +26,14 @@ const IndexPage = ({
   boardHeight: number;
 }) => {
   const wallsDef = getWallsByKey(wallsKey) || WALLS[0];
-  const [snakeConfig, setSnakeConfig] = useState<snakeGame.Config>({
-    boardWidth,
-    boardHeight,
-    initialSize: 3,
-    foodValue: 0.1,
-    walls: wallsDef.value(boardWidth, boardHeight),
-    seed: seed,
-  });
+  const [snakeConfig, setSnakeConfig] = useState<snakeGame.Config>(() =>
+    snakeGame.createConfig({
+      boardWidth,
+      boardHeight,
+      walls: wallsDef.value(boardWidth, boardHeight),
+      seed: seed,
+    }),
+  );
   const [viewSettings, setViewSettings] = useState({
     speed: BASE_SPEED,
     vision: false,
@@ -165,7 +160,7 @@ IndexPage.getInitialProps = ({
 }: {
   query: { [key: string]: string };
 }) => {
-  const seed = query.seed || getRandomSeed();
+  const seed = query.seed || '';
   const wallsKey = query.walls || WALLS[0].key;
   const wallsDef = getWallsByKey(wallsKey);
   const boardWidth = parseInt(query.width) || parseInt(query.size) || 31;

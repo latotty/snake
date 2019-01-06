@@ -20,6 +20,11 @@ const getRandomSeed = () =>
 
 const inlineBlockStyle = { display: 'inline-block' };
 
+interface RunnerStepResult {
+  currentStep: number;
+  hasRunning: boolean;
+  ais: { name: string; state: snakeGame.State; remainingSteps: number }[];
+}
 interface AiGame {
   gameTick: (
     state: snakeGame.State | undefined,
@@ -27,11 +32,13 @@ interface AiGame {
   ) => snakeGame.State;
   state: snakeGame.State;
   name: string;
+  remainingSteps: number;
   aiTick: AITick;
 }
 const createRunner = (
   config: snakeGame.Config,
   ais: ({ name: string; tick: AITick })[],
+  stepsPerLength: number,
 ) => {
   let aiGames: AiGame[] = ais.map(ai => {
     const gameTick = snakeGame.createGame(config);
@@ -41,21 +48,31 @@ const createRunner = (
       state,
       name: ai.name,
       aiTick: ai.tick,
+      remainingSteps: state.snakeParts.length * stepsPerLength,
     };
   });
-  return (): {
-    hasRunning: boolean;
-    ais: { name: string; state: snakeGame.State }[];
-  } => {
+  let currentStep = 0;
+  return (): RunnerStepResult => {
     const hasRunning = aiGames.some(({ state: { gameOver } }) => !gameOver);
     if (hasRunning) {
       aiGames = aiGames.map(aiGame => {
         if (aiGame.state.gameOver) {
           return aiGame;
         }
+        const maxSteps = aiGame.state.snakeParts.length * stepsPerLength;
+        if (currentStep > maxSteps) {
+          return {
+            ...aiGame,
+            state: {
+              ...aiGame.state,
+              gameOver: true,
+            },
+          };
+        }
         const decision = aiGame.aiTick(aiGame.state);
         return {
           ...aiGame,
+          remainingSteps: Math.max(0, maxSteps - currentStep),
           state: aiGame.gameTick(
             aiGame.gameTick(
               aiGame.state,
@@ -64,10 +81,16 @@ const createRunner = (
           ),
         };
       });
+      currentStep++;
     }
     return {
+      currentStep,
       hasRunning: hasRunning,
-      ais: aiGames.map(({ name, state }) => ({ name, state })),
+      ais: aiGames.map(({ name, state, remainingSteps }) => ({
+        name,
+        state,
+        remainingSteps,
+      })),
     };
   };
 };
@@ -84,14 +107,14 @@ const RunnerPage = ({
   boardHeight: number;
 }) => {
   const wallsDef = getWallsByKey(wallsKey) || WALLS[0];
-  const [snakeConfig, setSnakeConfig] = useState<snakeGame.Config>({
-    boardWidth,
-    boardHeight,
-    initialSize: 3,
-    foodValue: 0.1,
-    walls: wallsDef.value(boardWidth, boardHeight),
-    seed: seed,
-  });
+  const [snakeConfig, setSnakeConfig] = useState<snakeGame.Config>(() =>
+    snakeGame.createConfig({
+      boardWidth,
+      boardHeight,
+      walls: wallsDef.value(boardWidth, boardHeight),
+      seed: seed,
+    }),
+  );
 
   const [viewSettings, setViewSettings] = useState({
     speed: BASE_SPEED,
@@ -116,7 +139,7 @@ const RunnerPage = ({
         return { type: 'random', name, brain, createTick };
       }),
   );
-
+  const stepsPerLength = 100;
   const [runner, setRunner] = useState(() =>
     createRunner(
       snakeConfig,
@@ -124,6 +147,7 @@ const RunnerPage = ({
         name: name,
         tick: createTick(),
       })),
+      stepsPerLength,
     ),
   );
   useEffect(
@@ -135,23 +159,23 @@ const RunnerPage = ({
             name: name,
             tick: createTick(),
           })),
+          stepsPerLength,
         ),
       ),
     [snakeConfig, setRunner, aiBrains],
   ); // RESET EFFECT
 
-  const [aisState, setAisState] = useState<
-    {
-      state: snakeGame.State;
-      name: string;
-    }[]
-  >(() => []);
+  const [aisState, setAisState] = useState<RunnerStepResult>(() => ({
+    hasRunning: true,
+    currentStep: 0,
+    ais: [],
+  }));
 
   useEffect(
     () => {
       const tid = setInterval(() => {
         const result = runner();
-        setAisState(result.ais);
+        setAisState(result);
       }, loopTimeout);
       return () => clearInterval(tid);
     },
@@ -247,9 +271,10 @@ const RunnerPage = ({
           <button onClick={restartSimulationClick}>Restart</button>
           {viewSettingsPanel}
           {configPanel}
+          Current step: {aisState.currentStep}
         </div>
         <div>
-          {aisState.map(({ name, state }, i) => (
+          {aisState.ais.map(({ name, state, remainingSteps }, i) => (
             <div key={name} style={inlineBlockStyle}>
               <div>
                 <div
@@ -261,6 +286,7 @@ const RunnerPage = ({
                   Name: {name}
                 </div>
                 <div>Score: {state.snakeParts.length}</div>
+                <div>Remaining steps: {remainingSteps}</div>
               </div>
               <SnakeView
                 snakeConfig={snakeConfig}

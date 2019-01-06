@@ -3,6 +3,11 @@ import { alea } from 'seedrandom';
 import { getWallCells } from '../lib/wall-cells';
 import { tuple, Coord, coordEq, coordCollide, coordAdd } from '../lib/coord';
 
+const getRandomSeed = () =>
+  Math.random()
+    .toString()
+    .slice(2);
+
 export type Direction = Coord;
 export const Directions = {
   Up: [0, -1] as Direction,
@@ -15,10 +20,24 @@ export interface Config {
   boardWidth: number;
   boardHeight: number;
   initialSize: number;
-  foodValue: 0.1;
+  foodValue: number;
+  foodMult: boolean;
+  foodMin: number;
   walls: [Coord, Coord][];
   seed: string;
 }
+
+export const createConfig = (config: Partial<Config>): Config => ({
+  boardWidth: 31,
+  boardHeight: 31,
+  initialSize: 3,
+  foodValue: 0.1,
+  foodMult: true,
+  foodMin: 1,
+  walls: [],
+  ...config,
+  seed: config.seed || getRandomSeed(),
+});
 
 export interface State {
   snakeParts: Coord[];
@@ -119,9 +138,8 @@ export function createGame(
     const snakeHead = state.snakeParts[0];
     const nextCell = moveOnBoard(config, snakeHead, state.direction);
 
-    const nextTickBody = state.growth
-      ? state.snakeParts
-      : state.snakeParts.slice(0, -1);
+    const nextTickBody =
+      state.growth >= 1 ? state.snakeParts : state.snakeParts.slice(0, -1);
 
     if (coordEq(nextCell, state.food)) {
       // ate apple
@@ -138,7 +156,12 @@ export function createGame(
         ...state,
         growth:
           state.growth +
-          Math.max(1, Math.ceil(state.snakeParts.length * config.foodValue)),
+          Math.max(
+            config.foodMin,
+            config.foodMult
+              ? state.snakeParts.length * config.foodValue
+              : config.foodValue,
+          ),
         snakeParts,
         food,
       };
@@ -154,7 +177,7 @@ export function createGame(
 
     return {
       ...state,
-      growth: Math.max(0, state.growth - 1),
+      growth: state.growth >= 1 ? Math.max(0, state.growth - 1) : state.growth,
       snakeParts: [nextCell, ...nextTickBody],
     };
   };
