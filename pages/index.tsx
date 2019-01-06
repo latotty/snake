@@ -3,12 +3,11 @@ import Router from 'next/router';
 
 import * as snakeGame from '../game/snake';
 import { SnakeView } from '../components/snake-view';
-import { WALLS, WallsDef } from '../lib/walls';
+import { WALLS } from '../lib/walls';
 import { useManualSnake } from '../lib/manual-snake.hook';
 
 const BASE_TIMEOUT = 200;
 const BASE_SPEED = 1;
-const BOARD_SIZE = 11;
 
 const getRandomSeed = () =>
   Math.random()
@@ -17,14 +16,31 @@ const getRandomSeed = () =>
 
 const getWallsByKey = (key: string) => WALLS.find(wall => wall.key === key);
 
-const IndexPage = ({ wallsKey, seed }: { wallsKey: string; seed: string }) => {
-  const wallsDef = getWallsByKey(wallsKey);
+const pushURL = (query: Partial<{ seed: string; walls: string }>) => {
+  Router.push({
+    pathname: Router.pathname,
+    query: { ...Router.query, ...query },
+  });
+};
+
+const IndexPage = ({
+  wallsKey,
+  seed,
+  boardWidth,
+  boardHeight,
+}: {
+  wallsKey: string;
+  seed: string;
+  boardWidth: number;
+  boardHeight: number;
+}) => {
+  const wallsDef = getWallsByKey(wallsKey) || WALLS[0];
   const [snakeConfig, setSnakeConfig] = useState<snakeGame.Config>({
-    boardWidth: BOARD_SIZE,
-    boardHeight: BOARD_SIZE,
+    boardWidth,
+    boardHeight,
     initialSize: 3,
     foodValue: 0.1,
-    walls: wallsDef.value(BOARD_SIZE, BOARD_SIZE),
+    walls: wallsDef.value(boardWidth, boardHeight),
     seed: seed,
   });
   const [speed, setSpeed] = useState(BASE_SPEED);
@@ -37,10 +53,7 @@ const IndexPage = ({ wallsKey, seed }: { wallsKey: string; seed: string }) => {
   );
 
   const changeSeed = (newSeed: string) => {
-    Router.push({
-      pathname: Router.pathname,
-      query: { ...Router.query, seed: newSeed },
-    });
+    pushURL({ seed: newSeed });
     setSnakeConfig(config => ({ ...config, seed: newSeed }));
   };
 
@@ -67,13 +80,10 @@ const IndexPage = ({ wallsKey, seed }: { wallsKey: string; seed: string }) => {
     event.persist();
     const def = getWallsByKey(event.target.value);
     if (def) {
-      Router.push({
-        pathname: Router.pathname,
-        query: { ...Router.query, walls: event.target.value },
-      });
+      pushURL({ walls: event.target.value });
       setSnakeConfig((config: snakeGame.Config) => ({
         ...config,
-        walls: def.value(BOARD_SIZE, BOARD_SIZE),
+        walls: def.value(config.boardWidth, config.boardHeight),
       }));
     }
   }, []);
@@ -141,24 +151,23 @@ const IndexPage = ({ wallsKey, seed }: { wallsKey: string; seed: string }) => {
   );
 };
 
-IndexPage.getInitialProps = ({ query, res, pathname }) => {
+IndexPage.getInitialProps = ({
+  query,
+}: {
+  query: { [key: string]: string };
+}) => {
   const seed = query.seed || getRandomSeed();
   const wallsKey = query.walls || WALLS[0].key;
   const wallsDef = getWallsByKey(wallsKey);
+  const boardWidth = parseInt(query.width) || 31;
+  const boardHeight = parseInt(query.height) || 31;
 
-  if (!wallsDef) {
-    const url = `${pathname}?seed=${seed}&walls=${WALLS[0].key}`;
-    if (res) {
-      res.writeHead(302, {
-        Location: url,
-      });
-      res.end();
-    } else {
-      Router.push(url);
-    }
-  }
-
-  return { seed, wallsKey };
+  return {
+    seed,
+    wallsKey: wallsDef ? wallsKey : WALLS[0].key,
+    boardWidth,
+    boardHeight,
+  };
 };
 
 export default IndexPage;
