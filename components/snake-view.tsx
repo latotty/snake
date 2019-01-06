@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Stage, Layer } from 'react-konva';
 
 import * as snakeGame from '../game/snake';

@@ -2,7 +2,6 @@ import React, { useMemo, useCallback } from 'react';
 
 import * as snakeGame from '../game/snake';
 import { WALLS, getWallsByKey } from '../lib/walls';
-import { coordCollide } from '../lib/coord';
 
 const getRandomSeed = () =>
   Math.random()
