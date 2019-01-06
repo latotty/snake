@@ -1,7 +1,7 @@
+import { alea } from 'seedrandom';
+
 import { getWallCells } from '../lib/wall-cells';
 import { tuple, Coord, coordEq, coordCollide, coordAdd } from '../lib/coord';
-
-import { alea } from 'seedrandom';
 
 export type Direction = Coord;
 export const Directions = {

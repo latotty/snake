@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Stage, Layer } from 'react-konva';
+import { Stage, Layer, Text } from 'react-konva';
 
 import * as snakeGame from '../game/snake';
 import { GridLayer } from './grid-layer';
@@ -81,6 +81,26 @@ export const SnakeView = ({
     [vision, cellSize, snakeConfig, snakeState],
   );
 
+  const gameOverLayer = useMemo(
+    () =>
+      snakeState.gameOver && (
+        <Layer>
+          <Text
+            text="Game Over"
+            align="center"
+            verticalAlign="middle"
+            fill="white"
+            fontSize={30}
+            scaleX={1 / scale}
+            scaleY={1 / scale}
+            width={stageWith * scale}
+            height={stageHeight * scale}
+          />
+        </Layer>
+      ),
+    [snakeState.gameOver],
+  );
+
   return (
     <div style={stageContainerStyle}>
       <Stage
@@ -93,6 +113,7 @@ export const SnakeView = ({
         {gameLayer}
         {wallLayer}
         {visionLayer}
+        {gameOverLayer}
       </Stage>
     </div>
   );
