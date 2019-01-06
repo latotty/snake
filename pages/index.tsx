@@ -1,9 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import Router from 'next/router';
 
 import * as snakeGame from '../game/snake';
 import { SnakeView } from '../components/snake-view';
-import { WALLS } from '../lib/walls';
+import { WALLS, getWallsByKey } from '../lib/walls';
+import { ConfigPanel } from '../components/config-panel';
 import { useManualSnake } from '../lib/manual-snake.hook';
 
 const BASE_TIMEOUT = 200;
@@ -14,9 +15,14 @@ const getRandomSeed = () =>
     .toString()
     .slice(2);
 
-const getWallsByKey = (key: string) => WALLS.find(wall => wall.key === key);
-
-const pushURL = (query: Partial<{ seed: string; walls: string }>) => {
+const pushURL = (
+  query: Partial<{
+    seed: string;
+    walls: string;
+    width: number;
+    height: number;
+  }>,
+) => {
   Router.push({
     pathname: Router.pathname,
     query: { ...Router.query, ...query },
@@ -52,11 +58,6 @@ const IndexPage = ({
     BASE_TIMEOUT,
   );
 
-  const changeSeed = (newSeed: string) => {
-    pushURL({ seed: newSeed });
-    setSnakeConfig(config => ({ ...config, seed: newSeed }));
-  };
-
   const resetGame = useCallback(() => setSnakeConfig(c => ({ ...c })), []);
   const increaseSpeed = useCallback(() => setSpeed(s => s + 1), []);
   const decreaseSpeed = useCallback(
@@ -67,26 +68,41 @@ const IndexPage = ({
     event.persist();
     setVision(event.target.checked);
   }, []);
-  const onSeedChange = useCallback(event => {
-    event.persist();
-    changeSeed(event.target.value);
-  }, []);
-  const randomizeSeed = useCallback(event => {
-    event.persist();
-    changeSeed(getRandomSeed());
-  }, []);
 
-  const onWallSelect = useCallback(event => {
-    event.persist();
-    const def = getWallsByKey(event.target.value);
-    if (def) {
-      pushURL({ walls: event.target.value });
-      setSnakeConfig((config: snakeGame.Config) => ({
-        ...config,
-        walls: def.value(config.boardWidth, config.boardHeight),
-      }));
-    }
-  }, []);
+  const onSeedChange = useCallback(newSeed => pushURL({ seed: newSeed }), []);
+  const onWallsKeyChange = useCallback(
+    wallsKey => pushURL({ walls: wallsKey }),
+    [],
+  );
+  const onSnakeConfigChange = useCallback(
+    configChanges =>
+      setSnakeConfig(config => ({ ...config, ...configChanges })),
+    [setSnakeConfig],
+  );
+
+  const onSizeChange = useCallback(
+    size => pushURL({ width: size, height: size }),
+    [],
+  );
+
+  const configPanel = useMemo(
+    () => (
+      <ConfigPanel
+        config={snakeConfig}
+        onConfigChange={onSnakeConfigChange}
+        onWallsKeyChange={onWallsKeyChange}
+        onSeedChange={onSeedChange}
+        onSizeChange={onSizeChange}
+      />
+    ),
+    [
+      snakeConfig,
+      onSnakeConfigChange,
+      onWallsKeyChange,
+      onSeedChange,
+      onSizeChange,
+    ],
+  );
 
   return (
     <React.Fragment>
@@ -96,11 +112,15 @@ const IndexPage = ({
         }
       `}</style>
       <div>
-        <div style={{ maxWidth: 700 }}>
+        <div style={{ display: 'inline-block' }}>
           <SnakeView
             snakeConfig={snakeConfig}
             snakeState={snakeState}
             vision={vision}
+            cellSize={20}
+            scale={
+              31 / Math.max(snakeConfig.boardWidth, snakeConfig.boardHeight)
+            }
           />
         </div>
         <div style={{ display: 'inline-block' }}>
@@ -115,16 +135,6 @@ const IndexPage = ({
             <button onClick={decreaseSpeed}>-</button>
           </div>
           <div>
-            Wall layout:
-            <select value={wallsDef.key} onChange={onWallSelect}>
-              {WALLS.map(({ name, key }) => (
-                <option key={key} value={key}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
             <label>
               Vision:{' '}
               <input
@@ -134,17 +144,7 @@ const IndexPage = ({
               />
             </label>
           </div>
-          <div>
-            <label>
-              Seed:{' '}
-              <input
-                type="text"
-                value={snakeConfig.seed}
-                onChange={onSeedChange}
-              />
-              <button onClick={randomizeSeed}>Random</button>
-            </label>
-          </div>
+          {configPanel}
         </div>
       </div>
     </React.Fragment>

@@ -16,7 +16,6 @@
     "react": "16.7.0-alpha.2",
     "react-dom": "16.7.0-alpha.2",
     "react-konva": "16.7.0",
-    "react-measure": "2.2.2",
     "react-spring": "7.2.4",
     "seedrandom": "2.4.4",
     "typescript": "3.2.2"
@@ -27,7 +26,6 @@
     "@types/next": "7.0.5",
     "@types/react": "16.7.18",
     "@types/react-dom": "16.0.11",
-    "@types/react-measure": "2.0.4",
     "babel-core": "7.0.0-bridge.0",
     "babel-jest": "23.6.0",
     "enzyme": "3.8.0",

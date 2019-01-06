@@ -47,6 +47,11 @@ const WALLS_CROSS: WallFn = (width: number, height: number) => [
 
 export const WALLS: WallsDef[] = [
   {
+    name: 'Corners',
+    key: 'corners',
+    value: WALLS_CORNERS,
+  },
+  {
     name: 'Cross',
     key: 'cross',
     value: WALLS_CROSS,
@@ -57,13 +62,11 @@ export const WALLS: WallsDef[] = [
     value: WALLS_FULL,
   },
   {
-    name: 'Corners',
-    key: 'corners',
-    value: WALLS_CORNERS,
-  },
-  {
     name: 'No',
     key: 'no',
     value: WALLS_NO,
   },
 ];
+
+export const getWallsByKey = (key: string) =>
+  WALLS.find(wall => wall.key === key);

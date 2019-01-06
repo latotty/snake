@@ -1,8 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import Measure from 'react-measure';
 import { Stage, Layer } from 'react-konva';
 
-import { useWindowSize } from '../lib/window-size.hook';
 import * as snakeGame from '../game/snake';
 import { GridLayer } from './grid-layer';
 import { Snake } from './snake';
@@ -10,38 +8,30 @@ import { Food } from './food';
 import { Wall } from './wall';
 import { SnakeVision } from './snake-vision';
 
-const getScale = (
-  stageWidth: number,
-  stageHeight: number,
-  windowWidth: number,
-  windowHeight: number,
-): number => {
-  const xScale = windowWidth / stageWidth;
-  const yScale = windowHeight / stageHeight;
-  return Math.min(xScale, yScale);
+const stageContainerStyle = {
+  backgroundColor: 'black',
+  margin: 10,
+  borderStyle: 'solid',
+  borderColor: 'black',
+  borderWidth: 2,
+  display: 'inline-block',
 };
 
 export const SnakeView = ({
   snakeConfig,
   snakeState,
   vision,
+  cellSize,
+  scale = 1,
 }: {
   snakeConfig: snakeGame.Config;
   snakeState: snakeGame.State;
   vision: boolean;
+  cellSize: number;
+  scale: number;
 }) => {
-  const cellSize = 20;
   const stageWith = snakeConfig.boardWidth * cellSize;
   const stageHeight = snakeConfig.boardHeight * cellSize;
-
-  const [size, setSize] = useState([800, 800]);
-  const windowSize = useWindowSize();
-  const stageSize = Math.min(size[0], windowSize[1] * 0.8);
-
-  const margin = 10;
-  const border = 2;
-  const containerSize = stageSize - margin * 2 - border * 2;
-  const scale = getScale(stageWith, stageHeight, containerSize, containerSize);
 
   const gridLayer = useMemo(
     () => (
@@ -92,38 +82,18 @@ export const SnakeView = ({
   );
 
   return (
-    <Measure
-      bounds
-      onResize={(contentRect: any) => {
-        setSize([contentRect.bounds.width, contentRect.bounds.height]);
-      }}
-    >
-      {({ measureRef }) => (
-        <div ref={measureRef} style={{ width: '100%', height: '100%' }}>
-          <div
-            style={{
-              backgroundColor: 'black',
-              margin: margin,
-              borderStyle: 'solid',
-              borderColor: 'black',
-              borderWidth: border,
-              display: 'inline-block',
-            }}
-          >
-            <Stage
-              width={containerSize}
-              height={containerSize}
-              scaleX={scale}
-              scaleY={scale}
-            >
-              {gridLayer}
-              {gameLayer}
-              {wallLayer}
-              {visionLayer}
-            </Stage>
-          </div>
-        </div>
-      )}
-    </Measure>
+    <div style={stageContainerStyle}>
+      <Stage
+        width={stageWith * scale}
+        height={stageHeight * scale}
+        scaleX={scale}
+        scaleY={scale}
+      >
+        {gridLayer}
+        {gameLayer}
+        {wallLayer}
+        {visionLayer}
+      </Stage>
+    </div>
   );
 };
