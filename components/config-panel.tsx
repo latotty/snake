@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 
-import * as snakeGame from '../game/snake';
-import { WALLS, getWallsByKey } from '../lib/walls';
+import { SnakeConfig } from '../game/snake-config';
+import { WALLS, getWallsByKey, getWallsDefByWalls } from '../lib/walls';
 
 const getRandomSeed = () =>
   Math.random()
@@ -11,27 +11,18 @@ const getRandomSeed = () =>
 export const ConfigPanel = ({
   config,
   onConfigChange,
-  onSeedChange,
-  onWallsKeyChange,
-  onSizeChange,
 }: {
-  config: snakeGame.Config;
-  onConfigChange: (config: Partial<snakeGame.Config>) => void;
-  onSeedChange: (seed: string) => void;
-  onWallsKeyChange: (wallsKey: string) => void;
-  onSizeChange: (size: number) => void;
+  config: SnakeConfig;
+  onConfigChange: (config: Partial<SnakeConfig>) => void;
 }) => {
   const wallsKey = useMemo(
     () => {
-      const configWallsJSON = JSON.stringify(config.walls);
-      const def = WALLS.find(wallsDef => {
-        const walls = wallsDef.value(config.boardWidth, config.boardHeight);
-        return (
-          walls.length === config.walls.length &&
-          JSON.stringify(walls) === configWallsJSON
-        );
-      });
-      return def ? def.key : '';
+      const def = getWallsDefByWalls(
+        config.walls,
+        config.boardWidth,
+        config.boardHeight,
+      );
+      return def ? def.key : 'custom';
     },
     [config.walls],
   );
@@ -44,10 +35,9 @@ export const ConfigPanel = ({
         onConfigChange({
           walls: def.value(config.boardWidth, config.boardHeight),
         });
-        onWallsKeyChange && onWallsKeyChange(def.key);
       }
     },
-    [onConfigChange, onWallsKeyChange, config.boardWidth, config.boardHeight],
+    [onConfigChange, config.boardWidth, config.boardHeight],
   );
 
   const onSeedInputChange = useCallback(
@@ -57,9 +47,8 @@ export const ConfigPanel = ({
       onConfigChange({
         seed: newSeed,
       });
-      onSeedChange && onSeedChange(newSeed);
     },
-    [onConfigChange, onSeedChange],
+    [onConfigChange],
   );
 
   const randomizeSeed = useCallback(
@@ -69,9 +58,8 @@ export const ConfigPanel = ({
       onConfigChange({
         seed: newSeed,
       });
-      onSeedChange && onSeedChange(newSeed);
     },
-    [onConfigChange, onSeedChange],
+    [onConfigChange],
   );
 
   const onSizeInputChange = useCallback(
@@ -79,17 +67,16 @@ export const ConfigPanel = ({
       event.persist();
       const newSize = parseInt(event.target.value);
       const wallsDef = getWallsByKey(wallsKey);
-      if (newSize > 0 && wallsDef) {
-        const walls = wallsDef.value(newSize, newSize);
+      console.log(wallsDef, wallsKey);
+      if (newSize > 0 && (wallsDef || wallsKey === 'custom')) {
         onConfigChange({
-          walls,
+          ...(wallsDef && { walls: wallsDef.value(newSize, newSize) }),
           boardWidth: newSize,
           boardHeight: newSize,
         });
-        onSizeChange && onSizeChange(newSize);
       }
     },
-    [onConfigChange, onSizeChange, wallsKey],
+    [onConfigChange, wallsKey],
   );
 
   return (
@@ -102,6 +89,11 @@ export const ConfigPanel = ({
               {name}
             </option>
           ))}
+          {wallsKey === 'custom' && (
+            <option key="custom" value="custom">
+              Custom
+            </option>
+          )}
         </select>
       </div>
       <div>

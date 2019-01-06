@@ -2,42 +2,16 @@ import { alea } from 'seedrandom';
 
 import { getWallCells } from '../lib/wall-cells';
 import { tuple, Coord, coordEq, coordCollide, coordAdd } from '../lib/coord';
-
-const getRandomSeed = () =>
-  Math.random()
-    .toString()
-    .slice(2);
+import { SnakeConfig } from './snake-config';
 
 export type Direction = Coord;
 export const Directions = {
   Up: [0, -1] as Direction,
   Right: [1, 0] as Direction,
   Down: [0, 1] as Direction,
+
   Left: [-1, 0] as Direction,
 };
-
-export interface Config {
-  boardWidth: number;
-  boardHeight: number;
-  initialSize: number;
-  foodValue: number;
-  foodMult: boolean;
-  foodMin: number;
-  walls: [Coord, Coord][];
-  seed: string;
-}
-
-export const createConfig = (config: Partial<Config>): Config => ({
-  boardWidth: 31,
-  boardHeight: 31,
-  initialSize: 3,
-  foodValue: 0.1,
-  foodMult: true,
-  foodMin: 1,
-  walls: [],
-  ...config,
-  seed: config.seed || getRandomSeed(),
-});
 
 export interface State {
   snakeParts: Coord[];
@@ -49,7 +23,7 @@ export interface State {
 
 // better random gen, when the board is full TODO
 const randomCoord = (
-  config: Config,
+  config: SnakeConfig,
   ignoredCoords: Coord[],
   rng: () => number,
 ): Coord | null => {
@@ -66,13 +40,13 @@ const randomCoord = (
   return freeCells[Math.floor(rng() * freeCells.length)];
 };
 
-const freeCellCount = (config: Config, ignoredCoords: Coord[]): number => {
+const freeCellCount = (config: SnakeConfig, ignoredCoords: Coord[]): number => {
   const cellCount = config.boardWidth * config.boardHeight;
   const freeCellCount = cellCount - ignoredCoords.length;
   return freeCellCount;
 };
 
-const normalizeCoords = (config: Config, [x, y]: Coord): Coord => {
+const normalizeCoords = (config: SnakeConfig, [x, y]: Coord): Coord => {
   if (x < 0) {
     return normalizeCoords(config, [config.boardWidth + x, y]);
   }
@@ -89,7 +63,7 @@ const normalizeCoords = (config: Config, [x, y]: Coord): Coord => {
 };
 
 export const moveOnBoard = (
-  config: Config,
+  config: SnakeConfig,
   coord: Coord,
   direction: Direction,
 ): Coord => {
@@ -102,7 +76,7 @@ const getRandomDirection = (rng: () => number) =>
   ];
 
 export function createGame(
-  config: Config,
+  config: SnakeConfig,
 ): (state: State | undefined, newDirection?: Direction) => State {
   const wallCells = getWallCells(config.walls);
   const rng = alea(config.seed);

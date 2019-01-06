@@ -1,8 +1,12 @@
 import React, { useState, useCallback, useMemo } from 'react';
 
-import * as snakeGame from '../game/snake';
+import {
+  SnakeConfig,
+  createSnakeConfig,
+  serializeSnakeConfig,
+  deserializeSnakeConfig,
+} from '../game/snake-config';
 import { SnakeView } from '../components/snake-view';
-import { WALLS, getWallsByKey } from '../lib/walls';
 import { ConfigPanel } from '../components/config-panel';
 import { ViewSettingsPanel } from '../components/view-settings-panel';
 import { useManualSnake } from '../lib/manual-snake.hook';
@@ -14,25 +18,9 @@ const BASE_SPEED = 1;
 
 const inlineBlockStyle = { display: 'inline-block' };
 
-const IndexPage = ({
-  wallsKey,
-  seed,
-  boardWidth,
-  boardHeight,
-}: {
-  wallsKey: string;
-  seed: string;
-  boardWidth: number;
-  boardHeight: number;
-}) => {
-  const wallsDef = getWallsByKey(wallsKey) || WALLS[0];
-  const [snakeConfig, setSnakeConfig] = useState<snakeGame.Config>(() =>
-    snakeGame.createConfig({
-      boardWidth,
-      boardHeight,
-      walls: wallsDef.value(boardWidth, boardHeight),
-      seed: seed,
-    }),
+const IndexPage = ({ baseConfig }: { baseConfig: SnakeConfig | undefined }) => {
+  const [snakeConfig, setSnakeConfig] = useState<SnakeConfig>(() =>
+    createSnakeConfig(baseConfig || {}),
   );
   const [viewSettings, setViewSettings] = useState({
     speed: BASE_SPEED,
@@ -64,18 +52,15 @@ const IndexPage = ({
     [setViewSettings],
   );
 
-  const onSeedChange = useCallback(newSeed => pushURL({ seed: newSeed }), []);
-  const onWallsKeyChange = useCallback(
-    wallsKey => pushURL({ walls: wallsKey }),
-    [],
-  );
   const onSnakeConfigChange = useCallback(
     configChanges =>
-      setSnakeConfig(config => ({ ...config, ...configChanges })),
+      setSnakeConfig(config => {
+        const newConfig = createSnakeConfig({ ...config, ...configChanges });
+        pushURL({ config: serializeSnakeConfig(newConfig) });
+        return newConfig;
+      }),
     [setSnakeConfig],
   );
-
-  const onSizeChange = useCallback(size => pushURL({ size: size }), []);
 
   const viewSettingsPanel = useMemo(
     () => (
@@ -103,21 +88,9 @@ const IndexPage = ({
 
   const configPanel = useMemo(
     () => (
-      <ConfigPanel
-        config={snakeConfig}
-        onConfigChange={onSnakeConfigChange}
-        onWallsKeyChange={onWallsKeyChange}
-        onSeedChange={onSeedChange}
-        onSizeChange={onSizeChange}
-      />
+      <ConfigPanel config={snakeConfig} onConfigChange={onSnakeConfigChange} />
     ),
-    [
-      snakeConfig,
-      onSnakeConfigChange,
-      onWallsKeyChange,
-      onSeedChange,
-      onSizeChange,
-    ],
+    [snakeConfig, onSnakeConfigChange],
   );
 
   return (
@@ -155,22 +128,24 @@ const IndexPage = ({
   );
 };
 
+const parseConfigQuery = (config: string): SnakeConfig | undefined => {
+  try {
+    return deserializeSnakeConfig(config);
+  } catch (err) {
+    console.error('Failed to parse config query', err);
+    return undefined;
+  }
+};
+
 IndexPage.getInitialProps = ({
   query,
 }: {
   query: { [key: string]: string };
 }) => {
-  const seed = query.seed || '';
-  const wallsKey = query.walls || WALLS[0].key;
-  const wallsDef = getWallsByKey(wallsKey);
-  const boardWidth = parseInt(query.width) || parseInt(query.size) || 31;
-  const boardHeight = parseInt(query.height) || parseInt(query.size) || 31;
+  const baseConfig = query.config && parseConfigQuery(query.config);
 
   return {
-    seed,
-    wallsKey: wallsDef ? wallsKey : WALLS[0].key,
-    boardWidth,
-    boardHeight,
+    baseConfig,
   };
 };
 

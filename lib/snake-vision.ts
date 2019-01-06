@@ -1,4 +1,5 @@
 import * as snakeGame from '../game/snake';
+import { SnakeConfig } from '../game/snake-config';
 import { getWallCells } from '../lib/wall-cells';
 import { Coord, coordCollide } from './coord';
 import { getDirections } from './directions';
@@ -7,7 +8,7 @@ import { getDirections } from './directions';
  * [...[food, tails, walls]]
  */
 export const getVision = (
-  config: snakeGame.Config,
+  config: SnakeConfig,
   visionDistance: number,
 ): ((snakeParts: Coord[], forward: Coord, food: Coord) => number[]) => {
   const wallCells = getWallCells(config.walls);

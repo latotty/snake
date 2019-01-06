@@ -5,6 +5,7 @@ export const pushURL = (
     seed: string;
     walls: string;
     size: number;
+    config: string;
   }>,
 ) => {
   Router.push({
