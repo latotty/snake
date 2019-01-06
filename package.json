@@ -9,10 +9,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@types/msgpack-lite": "0.1.6",
     "@zeit/next-typescript": "1.1.1",
     "d3-ease": "1.0.5",
     "fork-ts-checker-webpack-plugin": "0.5.2",
     "konva": "2.6.0",
+    "msgpack-lite": "0.1.26",
     "next": "7.0.2",
     "react": "16.7.0-alpha.2",
     "react-dom": "16.7.0-alpha.2",

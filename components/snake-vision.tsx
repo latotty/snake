@@ -2,6 +2,7 @@ import React from 'react';
 import { Line } from 'react-konva';
 
 import * as snakeGame from '../game/snake';
+import { SnakeConfig } from '../game/snake-config';
 import { getVision } from '../lib/snake-vision';
 import { Coord, coordMult, coordAdd } from '../lib/coord';
 import { getDirections } from '../lib/directions';
@@ -19,7 +20,7 @@ export const SnakeVision = ({
   forward,
   food,
 }: {
-  config: snakeGame.Config;
+  config: SnakeConfig;
   cellSize: number;
   snakeParts: Coord[];
   forward: Coord;

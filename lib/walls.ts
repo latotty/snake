@@ -1,8 +1,8 @@
 import { Coord, tuple } from './coord';
 
-type Wall = [Coord, Coord];
-type WallFn = (width: number, height: number) => Wall[];
-interface WallsDef {
+export type Wall = [Coord, Coord];
+export type WallFn = (width: number, height: number) => Wall[];
+export interface WallsDef {
   name: string;
   key: string;
   value: WallFn;
@@ -70,3 +70,32 @@ export const WALLS: WallsDef[] = [
 
 export const getWallsByKey = (key: string) =>
   WALLS.find(wall => wall.key === key);
+
+export const getWallsDefByWalls = (
+  currentWalls: Wall[],
+  boardWidth: number,
+  boardHeight: number,
+): WallsDef | undefined => {
+  const currentWallsJSON = JSON.stringify(currentWalls);
+  const def = WALLS.find(wallsDef => {
+    const walls = wallsDef.value(boardWidth, boardHeight);
+    return (
+      walls.length === currentWalls.length &&
+      JSON.stringify(walls) === currentWallsJSON
+    );
+  });
+  return def;
+};
+
+export const validateWalls = (walls: Wall[]) =>
+  Array.isArray(walls) &&
+  walls.every(
+    wall =>
+      Array.isArray(wall) &&
+      wall.every(
+        cell =>
+          Array.isArray(cell) &&
+          cell.length === 2 &&
+          cell.every(num => Number.isInteger(num) && num >= 0),
+      ),
+  );

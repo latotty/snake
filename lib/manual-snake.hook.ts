@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 
+import { SnakeConfig } from '../game/snake-config';
 import * as snakeGame from '../game/snake';
 import { coordEq } from '../lib/coord';
 
@@ -49,7 +50,7 @@ const keyMap: { [key: string]: snakeGame.Direction } = {
 };
 
 const keyListener = (
-  config: snakeGame.Config,
+  config: SnakeConfig,
   gameTick: (
     state: snakeGame.State | undefined,
     newDirection?: snakeGame.Direction,
@@ -92,7 +93,7 @@ const keyListener = (
 };
 
 export const useManualSnake = (
-  config: snakeGame.Config,
+  config: SnakeConfig,
   speed: number,
   baseTimeout: number,
 ): {

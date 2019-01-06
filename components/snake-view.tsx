@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Stage, Layer, Text } from 'react-konva';
 
 import * as snakeGame from '../game/snake';
+import { SnakeConfig } from '../game/snake-config';
 import { GridLayer } from './grid-layer';
 import { Snake } from './snake';
 import { Food } from './food';
@@ -24,7 +25,7 @@ export const SnakeView = ({
   cellSize,
   scale = 1,
 }: {
-  snakeConfig: snakeGame.Config;
+  snakeConfig: SnakeConfig;
   snakeState: snakeGame.State;
   vision: boolean;
   cellSize: number;
@@ -43,7 +44,7 @@ export const SnakeView = ({
   const wallLayer = useMemo(
     () => (
       <Layer>
-        {snakeConfig.walls.map((wall, i) => (
+        {snakeConfig.walls.map((wall, i: number) => (
           <Wall key={`walls_${i}`} definition={wall} cellSize={cellSize} />
         ))}
       </Layer>
