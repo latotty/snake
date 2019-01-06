@@ -18,6 +18,7 @@
     "react-konva": "16.7.0",
     "react-measure": "2.2.2",
     "react-spring": "7.2.4",
+    "seedrandom": "2.4.4",
     "typescript": "3.2.2"
   },
   "devDependencies": {

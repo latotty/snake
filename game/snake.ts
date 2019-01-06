@@ -1,6 +1,8 @@
 import { getWallCells } from '../lib/wall-cells';
 import { tuple, Coord, coordEq, coordCollide, coordAdd } from '../lib/coord';
 
+import { alea } from 'seedrandom';
+
 export type Direction = Coord;
 export const Directions = {
   Up: [0, -1] as Direction,
@@ -15,6 +17,7 @@ export interface Config {
   initialSize: number;
   foodValue: 0.1;
   walls: [Coord, Coord][];
+  seed: string;
 }
 
 export interface State {
@@ -26,7 +29,11 @@ export interface State {
 }
 
 // better random gen, when the board is full TODO
-const randomCoord = (config: Config, ignoredCoords: Coord[]): Coord | null => {
+const randomCoord = (
+  config: Config,
+  ignoredCoords: Coord[],
+  rng: () => number,
+): Coord | null => {
   if (freeCellCount(config, ignoredCoords) < 1) {
     return null;
   }
@@ -37,7 +44,7 @@ const randomCoord = (config: Config, ignoredCoords: Coord[]): Coord | null => {
     )
     .filter(coord => !coordCollide(coord, ignoredCoords));
 
-  return freeCells[Math.floor(Math.random() * freeCells.length)];
+  return freeCells[Math.floor(rng() * freeCells.length)];
 };
 
 const freeCellCount = (config: Config, ignoredCoords: Coord[]): number => {
@@ -70,21 +77,22 @@ export const moveOnBoard = (
   return normalizeCoords(config, coordAdd(coord, direction));
 };
 
-const getRandomDirection = () =>
+const getRandomDirection = (rng: () => number) =>
   [Directions.Up, Directions.Right, Directions.Down, Directions.Left][
-    Math.floor(Math.random() * 4)
+    Math.floor(rng() * 4)
   ];
 
 export function createGame(
   config: Config,
 ): (state: State | undefined, newDirection?: Direction) => State {
   const wallCells = getWallCells(config.walls);
+  const rng = alea(config.seed);
 
   const tick = (state: State | undefined, newDirection?: Direction): State => {
     if (!state) {
-      const direction = getRandomDirection();
-      const snakeHead = randomCoord(config, wallCells)!;
-      const food = randomCoord(config, [snakeHead, ...wallCells])!;
+      const direction = getRandomDirection(rng);
+      const snakeHead = randomCoord(config, wallCells, rng)!;
+      const food = randomCoord(config, [snakeHead, ...wallCells], rng)!;
       if (!food || !snakeHead) {
         throw new Error('invalid map');
       }
@@ -118,7 +126,7 @@ export function createGame(
     if (coordEq(nextCell, state.food)) {
       // ate apple
       const snakeParts = [nextCell, ...nextTickBody];
-      const food = randomCoord(config, [...snakeParts, ...wallCells]);
+      const food = randomCoord(config, [...snakeParts, ...wallCells], rng);
       if (!food) {
         // full table so WINNING
         return {
