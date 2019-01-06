@@ -7,6 +7,7 @@ import { ConfigPanel } from '../components/config-panel';
 import { ViewSettingsPanel } from '../components/view-settings-panel';
 import { useManualSnake } from '../lib/manual-snake.hook';
 import { pushURL } from '../lib/next-router';
+import { GithubRibbon } from '../components/github-ribbon';
 
 const BASE_TIMEOUT = 200;
 const BASE_SPEED = 1;
@@ -131,6 +132,7 @@ const IndexPage = ({
           margin: 0;
         }
       `}</style>
+      <GithubRibbon />
       <div>
         <div style={inlineBlockStyle}>
           <SnakeView

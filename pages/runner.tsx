@@ -8,6 +8,7 @@ import { ViewSettingsPanel } from '../components/view-settings-panel';
 import { pushURL } from '../lib/next-router';
 import { AITick, decisionToDirection } from '../ai/ai';
 import { randomAI } from '../ai/random/random-ai';
+import { GithubRibbon } from '../components/github-ribbon';
 
 const BASE_TIMEOUT = 200;
 const BASE_SPEED = 1;
@@ -235,6 +236,7 @@ const RunnerPage = ({
           margin: 0;
         }
       `}</style>
+      <GithubRibbon />
       <div>
         <div>
           {viewSettingsPanel}
